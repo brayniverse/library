@@ -109,7 +109,10 @@ export default function Dashboard({ filmsCount, genresDistribution, decadesDistr
                     <Card>
                         <CardHeader className="flex flex-row items-baseline justify-between">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Total Films</CardTitle>
-                            <Link href={films.index.url()} prefetch className="text-sm underline">View</Link>
+                            <div className="flex items-center gap-3">
+                                <Link href={films.index.url()} prefetch className="text-sm underline">View</Link>
+                                <Link href={films.create.url()} prefetch className="text-sm underline">Add Film</Link>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="mt-1 text-3xl font-semibold">{filmsCount.toLocaleString()}</div>
