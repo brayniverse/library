@@ -466,6 +466,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                 accessorKey: 'format',
                 header: () => 'Format',
                 cell: ({ row }) => row.original.format,
+                meta: { className: 'hidden md:table-cell' },
               },
               {
                 id: 'language',
@@ -476,6 +477,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                   const more = languages.length > 1 ? ` +${languages.length - 1}` : '';
                   return primary ? `${primary}${more}` : '—';
                 },
+                meta: { className: 'hidden md:table-cell' },
               },
               {
                 id: 'country',
@@ -486,6 +488,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                   const more = countries.length > 1 ? ` +${countries.length - 1}` : '';
                   return primary ? `${primary}${more}` : '—';
                 },
+                meta: { className: 'hidden md:table-cell' },
               },
               {
                 accessorKey: 'year',

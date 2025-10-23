@@ -31,11 +31,15 @@ export function DataTable<TData, TValue>({ columns, data, onRowClick, emptyText 
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead key={header.id}>
-                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-              </TableHead>
-            ))}
+            {headerGroup.headers.map((header) => {
+              const meta = (header.column.columnDef.meta as { headerClassName?: string; className?: string } | undefined);
+              const thClass = meta?.headerClassName ?? meta?.className;
+              return (
+                <TableHead key={header.id} className={thClass}>
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              );
+            })}
           </TableRow>
         ))}
       </TableHeader>
@@ -48,11 +52,15 @@ export function DataTable<TData, TValue>({ columns, data, onRowClick, emptyText 
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               data-state={row.getIsSelected() && 'selected'}
             >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
+              {row.getVisibleCells().map((cell) => {
+                const meta = (cell.column.columnDef.meta as { cellClassName?: string; className?: string } | undefined);
+                const tdClass = meta?.cellClassName ?? meta?.className;
+                return (
+                  <TableCell key={cell.id} className={tdClass}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                );
+              })}
             </TableRow>
           ))
         ) : (
