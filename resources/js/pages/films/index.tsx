@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupAddon } from '@/components/ui/input-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
 import { MoreHorizontal, SlidersHorizontal, Search as SearchIcon } from 'lucide-react';
 import { type ColumnDef } from '@tanstack/react-table';
 
@@ -45,8 +46,21 @@ type Film = {
   custom_attributes?: CustomAttributes | null;
 };
 
+type Paginator<T> = {
+  data: T[];
+  links: { url: string | null; label: string; active: boolean }[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+  };
+};
+
 type Props = {
-  films: Film[];
+  films: Paginator<Film>;
   formats: string[];
   creating?: boolean;
   q?: string;
@@ -85,7 +99,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
   const [deleteTarget, setDeleteTarget] = React.useState<Film | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState<boolean>(false);
 
-  const requestFilms = React.useCallback((params?: { q?: string; sort?: 'title' | 'year'; direction?: 'asc' | 'desc'; format?: string; language?: string; country?: string; director?: string; year?: string | number | null }) => {
+  const requestFilms = React.useCallback((params?: { q?: string; sort?: 'title' | 'year'; direction?: 'asc' | 'desc'; format?: string; language?: string; country?: string; director?: string; year?: string | number | null; page?: number; perPage?: number }) => {
     router.get(filmRoutes.index.url(), {
       q: params?.q ?? query,
       sort: params?.sort ?? orderBy,
@@ -95,6 +109,8 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
       country: params?.country ?? countryFilter,
       director: params?.director ?? directorFilter,
       year: params?.year ?? yearFilter,
+      page: params?.page,
+      perPage: params?.perPage,
     }, {
       preserveState: true,
       preserveScroll: true,
@@ -102,6 +118,23 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
       only: ['films', 'q', 'sort', 'direction', 'format', 'language', 'country', 'director', 'year'],
     });
   }, [query, orderBy, orderDir, formatFilter, languageFilter, countryFilter, directorFilter, yearFilter]);
+
+  const meta = React.useMemo(() => {
+    type MetaShape = { current_page: number; last_page: number; per_page: number; total: number; from: number | null; to: number | null };
+    type FilmsLike = { meta?: MetaShape; current_page?: number; last_page?: number; per_page?: number; total?: number; from?: number | null; to?: number | null; data?: unknown[] };
+    const f = films as unknown as FilmsLike;
+    if (f && typeof f === 'object' && f.meta) {
+      return f.meta as MetaShape;
+    }
+    return {
+      current_page: f?.current_page ?? 1,
+      last_page: f?.last_page ?? 1,
+      per_page: f?.per_page ?? (Array.isArray(f?.data) ? f.data.length : 0),
+      total: f?.total ?? (Array.isArray(f?.data) ? f.data.length : 0),
+      from: f?.from ?? null,
+      to: f?.to ?? null,
+    } satisfies MetaShape;
+  }, [films]);
 
   // Live-search as you type (debounced)
   React.useEffect(() => {
@@ -516,11 +549,67 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
               },
             ];
             return (
-              <DataTable
-                columns={columns}
-                data={films}
-                onRowClick={(row) => { const film = row.original as Film; setSelected(film); setEditing(false); }}
-              />
+              <>
+                <DataTable
+                  columns={columns}
+                  data={films.data}
+                  onRowClick={(row) => { const film = row.original as Film; setSelected(film); setEditing(false); }}
+                />
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    {meta.total.toLocaleString()} total • Page {meta.current_page} of {meta.last_page}
+                  </div>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          disabled={meta.current_page <= 1}
+                          onClick={() => requestFilms({ page: meta.current_page - 1 })}
+                        />
+                      </PaginationItem>
+                      {(() => {
+                        const current = meta.current_page;
+                        const last = meta.last_page;
+                        const pages: (number | 'ellipsis')[] = [];
+                        const addPage = (p: number) => { if (!pages.includes(p)) pages.push(p); };
+                        if (last <= 7) {
+                          for (let i = 1; i <= last; i++) { addPage(i); }
+                        } else {
+                          addPage(1);
+                          if (current > 4) pages.push('ellipsis');
+                          const start = Math.max(2, current - 1);
+                          const end = Math.min(last - 1, current + 1);
+                          for (let i = start; i <= end; i++) { addPage(i); }
+                          if (current < last - 3) pages.push('ellipsis');
+                          addPage(last);
+                        }
+                        return pages.map((p, idx) => (
+                          <PaginationItem key={idx}>
+                            {p === 'ellipsis' ? (
+                              <PaginationEllipsis />
+                            ) : (
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); requestFilms({ page: p as number }); }}
+                                aria-current={p === current ? 'page' : undefined}
+                                isActive={p === current}
+                              >
+                                {p}
+                              </PaginationLink>
+                            )}
+                          </PaginationItem>
+                        ));
+                      })()}
+                      <PaginationItem>
+                        <PaginationNext
+                          disabled={meta.current_page >= meta.last_page}
+                          onClick={() => requestFilms({ page: meta.current_page + 1 })}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              </>
             );
           })()}
         </div>

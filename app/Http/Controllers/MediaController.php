@@ -100,22 +100,33 @@ class MediaController extends Controller
                 });
         };
 
+        // Pagination
+        $perPage = (int) $request->query('perPage', 5);
+        if ($perPage < 10) {
+            $perPage = 10;
+        } elseif ($perPage > 100) {
+            $perPage = 100;
+        }
+
         if ($q !== '') {
             // Use Scout to search and then constrain by the resulting keys to keep type enforcement
             $ids = Media::search($q)->keys();
-            // If no matches, short-circuit to empty collection
+            // If no matches, short-circuit to an empty paginator
             if ($ids->isEmpty()) {
-                $films = collect();
+                $films = $baseQuery->whereRaw('1=0')
+                    ->paginate($perPage, ['id', 'title', 'format', 'year', 'custom_attributes']);
             } else {
                 $films = $applyFilters($baseQuery)
                     ->whereIn('id', $ids)
                     ->when($sort === 'title', fn ($q) => $q->orderBy('orderable_title', $direction), fn ($q) => $q->orderBy($sort, $direction))
-                    ->get(['id', 'title', 'format', 'year', 'custom_attributes']);
+                    ->paginate($perPage, ['id', 'title', 'format', 'year', 'custom_attributes'])
+                    ->appends($request->query());
             }
         } else {
             $films = $applyFilters($baseQuery)
                 ->when($sort === 'title', fn ($q) => $q->orderby('orderable_title', $direction), fn ($q) => $q->orderBy($sort, $direction))
-                ->get(['id', 'title', 'format', 'year', 'custom_attributes']);
+                ->paginate($perPage, ['id', 'title', 'format', 'year', 'custom_attributes'])
+                ->appends($request->query());
         }
 
         // Derive unique directors list from films in the library for the combobox
@@ -157,7 +168,7 @@ class MediaController extends Controller
         $films = Media::query()
             ->where('type', MediaType::Film->value)
             ->orderBy('orderable_title', 'asc')
-            ->get(['id', 'title', 'format', 'year', 'custom_attributes']);
+            ->paginate(25, ['id', 'title', 'format', 'year', 'custom_attributes']);
 
         return Inertia::render('films/index', [
             'films' => $films,
