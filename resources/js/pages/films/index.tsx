@@ -508,13 +508,14 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
           >
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="create-title">Title</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-stretch">
                 <Input
                   id="create-title"
                   type="text"
                   value={createData.title}
                   onChange={(e) => setCreateData('title', e.target.value)}
                   required
+                  className="flex-1 min-w-0"
                 />
                 <Button
                   type="button"
@@ -533,7 +534,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
               {/* Results list */}
               {tmdbHasSearched && (
                 <>
-                  <div className="mt-2 max-h-60 overflow-auto rounded border">
+                  <div className="mt-2 max-h-60 overflow-auto rounded border max-w-full">
                     {tmdbResults.length === 0 && !tmdbSearching && (
                       <div className="p-2 text-sm text-muted-foreground">No results.</div>
                     )}
