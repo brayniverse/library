@@ -4,17 +4,21 @@ namespace App\Models;
 
 use App\Enums\MediaFormat;
 use App\Enums\MediaType;
+use App\Observers\MediaObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
+#[ObservedBy(MediaObserver::class)]
 class Media extends Model
 {
     use HasFactory, Searchable, SoftDeletes;
 
     protected $fillable = [
         'title',
+        'orderable_title',
         'type',
         'format',
         'year',

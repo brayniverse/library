@@ -73,9 +73,6 @@ class MediaController extends Controller
         $year = $request->query('year');
         $year = is_null($year) || $year === '' ? null : (int) $year;
 
-        // Normalized title ordering that ignores leading "The " (case-insensitive)
-        $titleOrderRaw = 'CASE WHEN LOWER(title) LIKE "the %" THEN SUBSTRING(title, 5) ELSE title END '.$direction;
-
         $baseQuery = Media::query()
             ->where('type', MediaType::Film->value);
 
@@ -108,12 +105,12 @@ class MediaController extends Controller
             } else {
                 $films = $applyFilters($baseQuery)
                     ->whereIn('id', $ids)
-                    ->when($sort === 'title', fn ($q) => $q->orderByRaw($titleOrderRaw), fn ($q) => $q->orderBy($sort, $direction))
+                    ->when($sort === 'title', fn ($q) => $q->orderBy('orderable_title', $direction), fn ($q) => $q->orderBy($sort, $direction))
                     ->get(['id', 'title', 'format', 'year', 'custom_attributes']);
             }
         } else {
             $films = $applyFilters($baseQuery)
-                ->when($sort === 'title', fn ($q) => $q->orderByRaw($titleOrderRaw), fn ($q) => $q->orderBy($sort, $direction))
+                ->when($sort === 'title', fn ($q) => $q->orderby('orderable_title', $direction), fn ($q) => $q->orderBy($sort, $direction))
                 ->get(['id', 'title', 'format', 'year', 'custom_attributes']);
         }
 
@@ -134,12 +131,9 @@ class MediaController extends Controller
     {
         $this->authorize('create', Media::class);
 
-        // Use normalized title ordering (ignoring leading "The ") for consistency
-        $titleOrderRaw = 'CASE WHEN LOWER(title) LIKE "the %" THEN SUBSTRING(title, 5) ELSE title END asc';
-
         $films = Media::query()
             ->where('type', MediaType::Film->value)
-            ->orderByRaw($titleOrderRaw)
+            ->orderBy('orderable_title', 'asc')
             ->get(['id', 'title', 'format', 'year', 'custom_attributes']);
 
         return Inertia::render('films/index', [
