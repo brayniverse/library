@@ -64,7 +64,7 @@ type Props = {
   formats: string[];
   creating?: boolean;
   q?: string;
-  sort?: 'title' | 'year';
+  sort?: 'title' | 'year' | 'created_at';
   direction?: 'asc' | 'desc';
   format?: string;
   language?: string;
@@ -81,11 +81,11 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-export default function FilmsIndex({ films, formats, creating = false, q = '', sort = 'title', direction = 'asc', format = '', language = '', country = '', director = '', directors = [], year = null }: Props) {
+export default function FilmsIndex({ films, formats, creating = false, q = '', sort = 'created_at', direction = 'desc', format = '', language = '', country = '', director = '', directors = [], year = null }: Props) {
   const [selected, setSelected] = React.useState<Film | null>(null);
   const [editing, setEditing] = React.useState<boolean>(false);
   const [query, setQuery] = React.useState<string>(q);
-  const [orderBy, setOrderBy] = React.useState<'title' | 'year'>(sort);
+  const [orderBy, setOrderBy] = React.useState<'title' | 'year' | 'created_at'>(sort);
   const [orderDir, setOrderDir] = React.useState<'asc' | 'desc'>(direction);
   const [formatFilter, setFormatFilter] = React.useState<string>(format);
   const [languageFilter, setLanguageFilter] = React.useState<string>(language);
@@ -99,7 +99,8 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
   const [deleteTarget, setDeleteTarget] = React.useState<Film | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState<boolean>(false);
 
-  const requestFilms = React.useCallback((params?: { q?: string; sort?: 'title' | 'year'; direction?: 'asc' | 'desc'; format?: string; language?: string; country?: string; director?: string; year?: string | number | null; page?: number; perPage?: number }) => {
+
+  const requestFilms = React.useCallback((params?: { q?: string; sort?: 'title' | 'year' | 'created_at'; direction?: 'asc' | 'desc'; format?: string; language?: string; country?: string; director?: string; year?: string | number | null; page?: number; perPage?: number }) => {
     router.get(filmRoutes.index.url(), {
       q: params?.q ?? query,
       sort: params?.sort ?? orderBy,

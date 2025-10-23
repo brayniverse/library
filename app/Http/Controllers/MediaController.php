@@ -60,10 +60,10 @@ class MediaController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         // Sorting (allowlist)
-        $sort = $request->query('sort', 'title');
-        $direction = strtolower((string) $request->query('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
-        if (! in_array($sort, ['title', 'year'], true)) {
-            $sort = 'title';
+        $sort = $request->query('sort', 'created_at');
+        $direction = strtolower((string) $request->query('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        if (! in_array($sort, ['title', 'year', 'created_at'], true)) {
+            $sort = 'created_at';
         }
 
         // Filters
