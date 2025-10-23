@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
 import { MoreHorizontal, SlidersHorizontal, Search as SearchIcon } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 import { type ColumnDef } from '@tanstack/react-table';
 
 const ALL_FORMAT = '__ALL__';
@@ -161,7 +162,6 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
     processing: creatingProcessing,
     errors: createErrors,
     reset: resetCreate,
-    wasSuccessful: createWasSuccessful,
   } = useForm({
     title: '',
     format: formats?.[0] ?? '',
@@ -260,23 +260,21 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
     }
   }, [wasSuccessful]);
 
-  React.useEffect(() => {
-    if (creating && createWasSuccessful) {
-      // Close create modal after a successful creation and return to /films
-      resetCreate('title');
-      router.visit(filmRoutes.index.url(), { replace: true });
-    }
-  }, [creating, createWasSuccessful]);
 
   const onSubmit: React.FormEventHandler = (e) => {
     e.preventDefault();
     if (!selected) return;
-    put(filmRoutes.update.url(selected.id));
+    put(filmRoutes.update.url(selected.id), {
+      onSuccess: () => {
+        toast.success('Film updated successfully.');
+      },
+    });
   };
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Films" />
+      <Toaster richColors position="top-right" />
 
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="rounded-xl border border-sidebar-border/70 bg-background p-4 dark:border-sidebar-border">
@@ -640,8 +638,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
               e.preventDefault();
               postCreate(filmRoutes.store.url(), {
                 onSuccess: () => {
-                  resetCreate('title');
-                  router.visit(filmRoutes.index.url(), { replace: true });
+                  toast.success('Film added successfully.');
                 },
               });
             }}
