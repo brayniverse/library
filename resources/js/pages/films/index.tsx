@@ -641,7 +641,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                 },
               });
             }}
-            className="space-y-4"
+            className="space-y-4 overflow-x-auto"
           >
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="create-title">Title</label>
@@ -681,12 +681,12 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                         type="button"
                         onClick={() => applyTmdb(r.id)}
                         variant="ghost"
-                        className="flex w-full items-start justify-start gap-3 border-b p-2 text-left last:border-b-0 hover:bg-muted/30"
+                        className="flex w-full items-start justify-start gap-3 border-b p-2 text-left last:border-b-0 hover:bg-muted/30 h-auto"
                       >
-                        <div className="flex-1">
+                        <div className="flex-1 max-w-full">
                           <div className="font-medium">{r.title}{r.year ? ` (${r.year})` : ''}</div>
                           {r.overview && (
-                            <div className="line-clamp-2 text-xs text-muted-foreground">{r.overview}</div>
+                            <div className="line-clamp-2 text-xs text-muted-foreground text-wrap">{r.overview}</div>
                           )}
                         </div>
                       </Button>
