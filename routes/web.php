@@ -97,11 +97,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ];
         }
 
+        // Aggregate film languages from custom_attributes.languages (array of objects with optional code/name)
+        $languageCounts = [];
+        foreach ($films as $film) {
+            $attrs = (array) ($film->custom_attributes ?? []);
+            $languages = $attrs['languages'] ?? [];
+            if (is_array($languages)) {
+                foreach ($languages as $lang) {
+                    // Accept either associative array with name/code or raw string
+                    $label = null;
+                    if (is_array($lang)) {
+                        $name = $lang['name'] ?? null;
+                        $code = $lang['code'] ?? null;
+                        $label = is_string($name) && $name !== '' ? $name : (is_string($code) ? $code : null);
+                    } elseif (is_string($lang)) {
+                        $label = $lang;
+                    }
+                    if (! is_string($label) || $label === '') {
+                        continue;
+                    }
+                    $languageCounts[$label] = ($languageCounts[$label] ?? 0) + 1;
+                }
+            }
+        }
+
+        ksort($languageCounts); // alphabetical
+
+        $languagesDistribution = [];
+        foreach ($languageCounts as $name => $count) {
+            $languagesDistribution[] = [
+                'name' => $name,
+                'count' => $count,
+            ];
+        }
+
         return Inertia::render('dashboard', [
             'filmsCount' => $filmsCount,
             'genresDistribution' => $genresDistribution,
             'directorsDistribution' => $directorsDistribution,
             'decadesDistribution' => $decadesDistribution,
+            'languagesDistribution' => $languagesDistribution,
         ]);
     })->name('dashboard');
 

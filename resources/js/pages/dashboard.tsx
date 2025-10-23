@@ -11,12 +11,14 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 type GenreSlice = { name: string; count: number };
 type DecadeSlice = { name: string; count: number };
 type DirectorSlice = { name: string; count: number };
+type LanguageSlice = { name: string; count: number };
 
 type Props = {
     filmsCount: number;
     genresDistribution: GenreSlice[];
     decadesDistribution: DecadeSlice[];
     directorsDistribution: DirectorSlice[];
+    languagesDistribution: LanguageSlice[];
 };
 
 function GenreBars({ data }: { data: GenreSlice[] }) {
@@ -72,6 +74,24 @@ function DirectorsBars({ data }: { data: DirectorSlice[] }) {
     );
 }
 
+function LanguagesBars({ data }: { data: LanguageSlice[] }) {
+    const top = data.slice(0, 8);
+    const chartConfig: ChartConfig = {
+        count: { label: 'Languages', color: 'var(--color-chart-4)' },
+    };
+    return (
+        <ChartContainer className="h-60 w-full" config={chartConfig}>
+            <BarChart data={top} layout="vertical" margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
+                <CartesianGrid horizontal vertical={false} strokeDasharray="3 3" />
+                <XAxis type="number" hide tickLine={false} axisLine={false} />
+                <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={120} tick={{ fontSize: 12 }} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent nameKey="name" />} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={[0, 4, 4, 0]} />
+            </BarChart>
+        </ChartContainer>
+    );
+}
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
@@ -79,7 +99,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Dashboard({ filmsCount, genresDistribution, decadesDistribution, directorsDistribution }: Props) {
+export default function Dashboard({ filmsCount, genresDistribution, decadesDistribution, directorsDistribution, languagesDistribution }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -121,6 +141,20 @@ export default function Dashboard({ filmsCount, genresDistribution, decadesDistr
                                 <div className="text-sm text-muted-foreground">No directors provided yet.</div>
                             ) : (
                                 <DirectorsBars data={directorsDistribution} />
+                            )}
+                        </CardContent>
+                    </Card>
+                    {/* Films by Language Distribution */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Films by Language</CardTitle>
+                            <Link href={films.index.url()} prefetch className="text-sm underline">View Films</Link>
+                        </CardHeader>
+                        <CardContent>
+                            {languagesDistribution.length === 0 ? (
+                                <div className="text-sm text-muted-foreground">No languages provided yet.</div>
+                            ) : (
+                                <LanguagesBars data={languagesDistribution} />
                             )}
                         </CardContent>
                     </Card>
