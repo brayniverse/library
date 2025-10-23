@@ -17,5 +17,6 @@ it('shows films index page', function () {
             ->component('films/index')
             ->has('films')
             ->has('formats')
+            ->has('directors')
         );
 });

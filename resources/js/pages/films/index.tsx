@@ -55,6 +55,8 @@ type Props = {
   format?: string;
   language?: string;
   country?: string;
+  director?: string;
+  directors?: string[];
   year?: number | null;
 };
 
@@ -65,7 +67,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-export default function FilmsIndex({ films, formats, creating = false, q = '', sort = 'title', direction = 'asc', format = '', language = '', country = '', year = null }: Props) {
+export default function FilmsIndex({ films, formats, creating = false, q = '', sort = 'title', direction = 'asc', format = '', language = '', country = '', director = '', directors = [], year = null }: Props) {
   const [selected, setSelected] = React.useState<Film | null>(null);
   const [editing, setEditing] = React.useState<boolean>(false);
   const [query, setQuery] = React.useState<string>(q);
@@ -74,13 +76,16 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
   const [formatFilter, setFormatFilter] = React.useState<string>(format);
   const [languageFilter, setLanguageFilter] = React.useState<string>(language);
   const [countryFilter, setCountryFilter] = React.useState<string>(country);
+  const [directorFilter, setDirectorFilter] = React.useState<string>(director);
+  const [directorMenuOpen, setDirectorMenuOpen] = React.useState<boolean>(false);
+  const [directorSearch, setDirectorSearch] = React.useState<string>('');
   const [yearFilter, setYearFilter] = React.useState<string>(year === null || typeof year === 'undefined' ? '' : String(year));
   const [filtersOpen, setFiltersOpen] = React.useState<boolean>(false);
   const [showCreateDetails, setShowCreateDetails] = React.useState<boolean>(false);
   const [deleteTarget, setDeleteTarget] = React.useState<Film | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState<boolean>(false);
 
-  const requestFilms = React.useCallback((params?: { q?: string; sort?: 'title' | 'year'; direction?: 'asc' | 'desc'; format?: string; language?: string; country?: string; year?: string | number | null }) => {
+  const requestFilms = React.useCallback((params?: { q?: string; sort?: 'title' | 'year'; direction?: 'asc' | 'desc'; format?: string; language?: string; country?: string; director?: string; year?: string | number | null }) => {
     router.get(filmRoutes.index.url(), {
       q: params?.q ?? query,
       sort: params?.sort ?? orderBy,
@@ -88,14 +93,15 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
       format: params?.format ?? formatFilter,
       language: params?.language ?? languageFilter,
       country: params?.country ?? countryFilter,
+      director: params?.director ?? directorFilter,
       year: params?.year ?? yearFilter,
     }, {
       preserveState: true,
       preserveScroll: true,
       replace: true,
-      only: ['films', 'q', 'sort', 'direction', 'format', 'language', 'country', 'year'],
+      only: ['films', 'q', 'sort', 'direction', 'format', 'language', 'country', 'director', 'year'],
     });
-  }, [query, orderBy, orderDir, formatFilter, languageFilter, countryFilter, yearFilter]);
+  }, [query, orderBy, orderDir, formatFilter, languageFilter, countryFilter, directorFilter, yearFilter]);
 
   // Live-search as you type (debounced)
   React.useEffect(() => {
@@ -103,7 +109,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
       requestFilms();
     }, 300);
     return () => clearTimeout(handler);
-  }, [query, orderBy, orderDir, formatFilter, languageFilter, countryFilter, yearFilter, requestFilms]);
+  }, [query, orderBy, orderDir, formatFilter, languageFilter, countryFilter, directorFilter, yearFilter, requestFilms]);
 
   const { data, setData, put, processing, errors, reset, wasSuccessful } = useForm({
     title: '',
@@ -264,11 +270,11 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                     />
                   </InputGroup>
                 </div>
-                {(query !== '' || formatFilter !== '' || languageFilter !== '' || countryFilter !== '' || yearFilter !== '') && (
+                {(query !== '' || formatFilter !== '' || languageFilter !== '' || countryFilter !== '' || directorFilter !== '' || yearFilter !== '') && (
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => { setQuery(''); setFormatFilter(''); setLanguageFilter(''); setCountryFilter(''); setYearFilter(''); }}
+                    onClick={() => { setQuery(''); setFormatFilter(''); setLanguageFilter(''); setCountryFilter(''); setDirectorFilter(''); setYearFilter(''); }}
                   >
                     Clear
                   </Button>
@@ -327,6 +333,48 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       onChange={(e) => setCountryFilter(e.target.value)}
                     />
 
+                    <label className="text-sm font-medium" htmlFor="filter-director">Director</label>
+                    <DropdownMenu open={directorMenuOpen} onOpenChange={setDirectorMenuOpen}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          id="filter-director"
+                          variant="outline"
+                          aria-haspopup="listbox"
+                          className="justify-between"
+                        >
+                          {directorFilter !== '' ? directorFilter : 'All directors'}
+                          <MoreHorizontal className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-64 p-2">
+                        <Input
+                          type="text"
+                          placeholder="Search directors…"
+                          value={directorSearch}
+                          onChange={(e) => setDirectorSearch(e.target.value)}
+                          className="mb-2"
+                          autoFocus
+                        />
+                        <DropdownMenuItem onSelect={() => { setDirectorFilter(''); setDirectorSearch(''); setDirectorMenuOpen(false); }}>
+                          All directors
+                        </DropdownMenuItem>
+                        {directors
+                          .filter((d) => d.toLowerCase().includes(directorSearch.toLowerCase()))
+                          .slice(0, 100)
+                          .map((d) => (
+                            <DropdownMenuItem key={d} onSelect={() => { setDirectorFilter(d); setDirectorMenuOpen(false); }}>
+                              {d}
+                            </DropdownMenuItem>
+                          ))}
+                        {directorSearch && !directors.some((d) => d.toLowerCase() === directorSearch.toLowerCase()) && (
+                          <DropdownMenuItem onSelect={() => { setDirectorFilter(directorSearch); setDirectorMenuOpen(false); }}>
+                            Use "{directorSearch}"
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <label className="text-sm font-medium" htmlFor="filter-year">Year</label>
                     <Input
                       id="filter-year"
@@ -342,7 +390,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => { setQuery(''); setFormatFilter(''); setLanguageFilter(''); setCountryFilter(''); setYearFilter(''); }}
+                        onClick={() => { setQuery(''); setFormatFilter(''); setLanguageFilter(''); setCountryFilter(''); setDirectorFilter(''); setYearFilter(''); }}
                       >
                         Clear
                       </Button>

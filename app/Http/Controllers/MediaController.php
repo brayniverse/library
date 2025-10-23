@@ -70,6 +70,7 @@ class MediaController extends Controller
         $format = trim((string) $request->query('format', ''));
         $language = trim((string) $request->query('language', ''));
         $country = trim((string) $request->query('country', ''));
+        $director = trim((string) $request->query('director', ''));
         $year = $request->query('year');
         $year = is_null($year) || $year === '' ? null : (int) $year;
 
@@ -77,7 +78,7 @@ class MediaController extends Controller
             ->where('type', MediaType::Film->value);
 
         // Closure to apply filters consistently
-        $applyFilters = function ($query) use ($format, $language, $country, $year) {
+        $applyFilters = function ($query) use ($format, $language, $country, $director, $year) {
             /** @var \Illuminate\Database\Eloquent\Builder $query */
             return $query
                 ->when($format !== '', fn ($q) => $q->where('format', $format))
@@ -93,6 +94,9 @@ class MediaController extends Controller
                         $q2->whereRaw("JSON_SEARCH(JSON_EXTRACT(custom_attributes, '$.countries[*].code'), 'one', ?, NULL) IS NOT NULL", [$country])
                             ->orWhereRaw("JSON_SEARCH(JSON_EXTRACT(custom_attributes, '$.countries[*].name'), 'one', ?, NULL) IS NOT NULL", [$country]);
                     });
+                })
+                ->when($director !== '', function ($q) use ($director) {
+                    $q->whereRaw("JSON_SEARCH(JSON_EXTRACT(custom_attributes, '$.directors[*]'), 'one', ?, NULL) IS NOT NULL", [$director]);
                 });
         };
 
@@ -114,6 +118,23 @@ class MediaController extends Controller
                 ->get(['id', 'title', 'format', 'year', 'custom_attributes']);
         }
 
+        // Derive unique directors list from films in the library for the combobox
+        $directors = Media::query()
+            ->where('type', MediaType::Film->value)
+            ->whereNotNull('custom_attributes')
+            ->get(['custom_attributes'])
+            ->flatMap(function ($m) {
+                $attrs = (array) ($m->custom_attributes ?? []);
+                $list = (array) ($attrs['directors'] ?? []);
+                return collect($list)->map(function ($d) {
+                    return is_string($d) ? trim($d) : '';
+                });
+            })
+            ->filter(fn ($d) => $d !== '')
+            ->unique()
+            ->sort()
+            ->values();
+
         return Inertia::render('films/index', [
             'films' => $films,
             'formats' => array_map(fn ($c) => $c->value, MediaFormat::cases()),
@@ -123,6 +144,8 @@ class MediaController extends Controller
             'format' => $format,
             'language' => $language,
             'country' => $country,
+            'director' => $director,
+            'directors' => $directors,
             'year' => $year,
         ]);
     }
