@@ -232,7 +232,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
         countries: m.custom_attributes?.countries ?? current.countries ?? [],
         languages: m.custom_attributes?.languages ?? current.languages ?? [],
       };
-      setCreateData('custom_attributes', next as unknown);
+      setCreateData('custom_attributes', next as CustomAttributes);
       setShowCreateDetails(true);
     } catch {
       setTmdbError('Unable to fetch details from TMDB.');
@@ -751,7 +751,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       const val = e.target.value;
                       const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
                       const next = { ...attrs, run_time: val === '' ? null : Number(val) };
-                      setCreateData('custom_attributes', next as unknown);
+                      setCreateData('custom_attributes', next as CustomAttributes);
                     }}
                   />
                   {createErrors['custom_attributes.run_time'] && (
@@ -769,7 +769,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       const raw = e.target.value;
                       const arr = raw.split(',').map((s) => s.trim()).filter(Boolean);
                       const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
-                      setCreateData('custom_attributes', { ...attrs, genres: arr } as unknown);
+                      setCreateData('custom_attributes', { ...attrs, genres: arr } as CustomAttributes);
                     }}
                   />
                   {createErrors['custom_attributes.genres'] && (
@@ -787,7 +787,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       const raw = e.target.value;
                       const arr = raw.split(',').map((s) => s.trim()).filter(Boolean);
                       const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
-                      setCreateData('custom_attributes', { ...attrs, directors: arr } as unknown);
+                      setCreateData('custom_attributes', { ...attrs, directors: arr } as CustomAttributes);
                     }}
                   />
                   {createErrors['custom_attributes.directors'] && (
@@ -803,7 +803,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                     value={(createData.custom_attributes as CustomAttributes)?.description ?? ''}
                     onChange={(e) => {
                       const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
-                      setCreateData('custom_attributes', { ...attrs, description: e.target.value } as unknown);
+                      setCreateData('custom_attributes', { ...attrs, description: e.target.value } as CustomAttributes);
                     }}
                   />
                   {createErrors['custom_attributes.description'] && (
@@ -819,7 +819,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                     value={(createData.custom_attributes as CustomAttributes)?.tagline ?? ''}
                     onChange={(e) => {
                       const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
-                      setCreateData('custom_attributes', { ...attrs, tagline: e.target.value } as unknown);
+                      setCreateData('custom_attributes', { ...attrs, tagline: e.target.value } as CustomAttributes);
                     }}
                   />
                   {createErrors['custom_attributes.tagline'] && (
@@ -838,7 +838,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       onClick={() => {
                         const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
                         const list = [...(attrs.countries ?? []), { code: '', name: '' }];
-                        setCreateData('custom_attributes', { ...attrs, countries: list } as unknown);
+                        setCreateData('custom_attributes', { ...attrs, countries: list } as CustomAttributes);
                       }}
                     >
                       Add Country
@@ -854,7 +854,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
                           const list = [...(attrs.countries ?? [])];
                           list[i] = { ...list[i], code: e.target.value } as CodeName;
-                          setCreateData('custom_attributes', { ...attrs, countries: list } as unknown);
+                          setCreateData('custom_attributes', { ...attrs, countries: list } as CustomAttributes);
                         }}
                       />
                       <Input
@@ -865,7 +865,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
                           const list = [...(attrs.countries ?? [])];
                           list[i] = { ...list[i], name: e.target.value } as CodeName;
-                          setCreateData('custom_attributes', { ...attrs, countries: list } as unknown);
+                          setCreateData('custom_attributes', { ...attrs, countries: list } as CustomAttributes);
                         }}
                       />
                       <Button
@@ -876,7 +876,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
                           const list = [...(attrs.countries ?? [])];
                           list.splice(i, 1);
-                          setCreateData('custom_attributes', { ...attrs, countries: list } as unknown);
+                          setCreateData('custom_attributes', { ...attrs, countries: list } as CustomAttributes);
                         }}
                       >
                         Remove
@@ -896,7 +896,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       onClick={() => {
                         const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
                         const list = [...(attrs.languages ?? []), { code: '', name: '' }];
-                        setCreateData('custom_attributes', { ...attrs, languages: list } as unknown);
+                        setCreateData('custom_attributes', { ...attrs, languages: list } as CustomAttributes);
                       }}
                     >
                       Add Language
@@ -912,7 +912,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
                           const list = [...(attrs.languages ?? [])];
                           list[i] = { ...list[i], code: e.target.value } as CodeName;
-                          setCreateData('custom_attributes', { ...attrs, languages: list } as unknown);
+                          setCreateData('custom_attributes', { ...attrs, languages: list } as CustomAttributes);
                         }}
                       />
                       <Input
@@ -923,7 +923,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
                           const list = [...(attrs.languages ?? [])];
                           list[i] = { ...list[i], name: e.target.value } as CodeName;
-                          setCreateData('custom_attributes', { ...attrs, languages: list } as unknown);
+                          setCreateData('custom_attributes', { ...attrs, languages: list } as CustomAttributes);
                         }}
                       />
                       <Button
@@ -934,7 +934,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (createData.custom_attributes as CustomAttributes) ?? {};
                           const list = [...(attrs.languages ?? [])];
                           list.splice(i, 1);
-                          setCreateData('custom_attributes', { ...attrs, languages: list } as unknown);
+                          setCreateData('custom_attributes', { ...attrs, languages: list } as CustomAttributes);
                         }}
                       >
                         Remove
@@ -1131,7 +1131,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       const val = e.target.value;
                       const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
                       const next = { ...attrs, run_time: val === '' ? null : Number(val) };
-                      setData('custom_attributes', next as unknown);
+                      setData('custom_attributes', next as CustomAttributes);
                     }}
                   />
                   {errors['custom_attributes.run_time'] && (
@@ -1149,7 +1149,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       const raw = e.target.value;
                       const arr = raw.split(',').map((s) => s.trim()).filter(Boolean);
                       const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
-                      setData('custom_attributes', { ...attrs, genres: arr } as unknown);
+                      setData('custom_attributes', { ...attrs, genres: arr } as CustomAttributes);
                     }}
                   />
                   {errors['custom_attributes.genres'] && (
@@ -1167,7 +1167,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       const raw = e.target.value;
                       const arr = raw.split(',').map((s) => s.trim()).filter(Boolean);
                       const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
-                      setData('custom_attributes', { ...attrs, directors: arr } as unknown);
+                      setData('custom_attributes', { ...attrs, directors: arr } as CustomAttributes);
                     }}
                   />
                   {errors['custom_attributes.directors'] && (
@@ -1183,7 +1183,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                     value={(data.custom_attributes as CustomAttributes | undefined)?.description ?? ''}
                     onChange={(e) => {
                       const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
-                      setData('custom_attributes', { ...attrs, description: e.target.value } as unknown);
+                      setData('custom_attributes', { ...attrs, description: e.target.value } as CustomAttributes);
                     }}
                   />
                   {errors['custom_attributes.description'] && (
@@ -1199,7 +1199,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                     value={(data.custom_attributes as CustomAttributes | undefined)?.tagline ?? ''}
                     onChange={(e) => {
                       const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
-                      setData('custom_attributes', { ...attrs, tagline: e.target.value } as unknown);
+                      setData('custom_attributes', { ...attrs, tagline: e.target.value } as CustomAttributes);
                     }}
                   />
                   {errors['custom_attributes.tagline'] && (
@@ -1218,7 +1218,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       onClick={() => {
                         const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
                         const list = [...(attrs.countries ?? []), { code: '', name: '' }];
-                        setData('custom_attributes', { ...attrs, countries: list } as unknown);
+                        setData('custom_attributes', { ...attrs, countries: list } as CustomAttributes);
                       }}
                     >
                       Add Country
@@ -1234,7 +1234,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
                           const list = [...(attrs.countries ?? [])];
                           list[i] = { ...list[i], code: e.target.value } as CodeName;
-                          setData('custom_attributes', { ...attrs, countries: list } as unknown);
+                          setData('custom_attributes', { ...attrs, countries: list } as CustomAttributes);
                         }}
                       />
                       <Input
@@ -1245,7 +1245,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
                           const list = [...(attrs.countries ?? [])];
                           list[i] = { ...list[i], name: e.target.value } as CodeName;
-                          setData('custom_attributes', { ...attrs, countries: list } as unknown);
+                          setData('custom_attributes', { ...attrs, countries: list } as CustomAttributes);
                         }}
                       />
                       <Button
@@ -1256,7 +1256,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
                           const list = [...(attrs.countries ?? [])];
                           list.splice(i, 1);
-                          setData('custom_attributes', { ...attrs, countries: list } as unknown);
+                          setData('custom_attributes', { ...attrs, countries: list } as CustomAttributes);
                         }}
                       >
                         Remove
@@ -1276,7 +1276,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                       onClick={() => {
                         const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
                         const list = [...(attrs.languages ?? []), { code: '', name: '' }];
-                        setData('custom_attributes', { ...attrs, languages: list } as unknown);
+                        setData('custom_attributes', { ...attrs, languages: list } as CustomAttributes);
                       }}
                     >
                       Add Language
@@ -1292,7 +1292,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
                           const list = [...(attrs.languages ?? [])];
                           list[i] = { ...list[i], code: e.target.value } as CodeName;
-                          setData('custom_attributes', { ...attrs, languages: list } as unknown);
+                          setData('custom_attributes', { ...attrs, languages: list } as CustomAttributes);
                         }}
                       />
                       <Input
@@ -1303,7 +1303,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
                           const list = [...(attrs.languages ?? [])];
                           list[i] = { ...list[i], name: e.target.value } as CodeName;
-                          setData('custom_attributes', { ...attrs, languages: list } as unknown);
+                          setData('custom_attributes', { ...attrs, languages: list } as CustomAttributes);
                         }}
                       />
                       <Button
@@ -1314,7 +1314,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           const attrs = (data.custom_attributes as CustomAttributes | undefined) ?? {};
                           const list = [...(attrs.languages ?? [])];
                           list.splice(i, 1);
-                          setData('custom_attributes', { ...attrs, languages: list } as unknown);
+                          setData('custom_attributes', { ...attrs, languages: list } as CustomAttributes);
                         }}
                       >
                         Remove
