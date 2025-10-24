@@ -548,6 +548,19 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.post(filmRoutes.fetchPoster.url(film.id), {}, {
+                                preserveScroll: true,
+                                onSuccess: () => toast.success('Poster fetch requested.'),
+                                onError: () => toast.error('Unable to fetch poster.'),
+                              });
+                            }}
+                            disabled={!!film.image_url}
+                          >
+                            {film.image_url ? 'Poster added' : 'Fetch poster'}
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelected(film); setEditing(true); }}>
                             Edit
                           </DropdownMenuItem>

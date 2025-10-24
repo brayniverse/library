@@ -297,4 +297,89 @@ class MediaController extends Controller
 
         return redirect()->route('films.index')->with('success', 'Film deleted successfully.');
     }
+
+    public function fetchPoster(Media $media)
+    {
+        $this->authorize('update', $media);
+
+        // Ensure it's a film
+        if ($media->type->value !== MediaType::Film->value) {
+            abort(404);
+        }
+
+        // If it already has a poster, do nothing (idempotent)
+        if ($media->poster_path) {
+            return redirect()->route('films.index')->with('info', 'Poster already exists for this film.');
+        }
+
+        try {
+            $query = trim((string) ($media->title ?? ''));
+            $year = (int) ($media->year ?? 0);
+
+            if ($query === '') {
+                return redirect()->route('films.index')->with('error', 'Film title is empty; cannot search TMDB.');
+            }
+
+            $base = 'https://api.themoviedb.org';
+            $path = '/3/search/movie';
+
+            $key = config('services.tmdb.key') ?? env('TMDB_KEY');
+
+            $params = [
+                'query' => $query,
+                'include_adult' => false,
+                'language' => 'en-US',
+                'page' => 1,
+            ];
+            if ($year > 0) {
+                $params['year'] = $year;
+            }
+
+            if (is_string($key) && str_starts_with($key, 'eyJ')) {
+                $response = Http::withToken($key)->get($base.$path, $params);
+            } else {
+                $response = Http::get($base.$path, array_merge(['api_key' => $key], $params));
+            }
+
+            if ($response->failed()) {
+                return redirect()->route('films.index')->with('error', 'TMDB search failed.');
+            }
+
+            $payload = $response->json();
+            $results = collect($payload['results'] ?? []);
+
+            // Prefer result with poster_path and matching year if available
+            $candidate = $results->first(function ($r) use ($year) {
+                if (empty($r['poster_path'])) {
+                    return false;
+                }
+                if ($year > 0 && ! empty($r['release_date'])) {
+                    return (int) substr($r['release_date'], 0, 4) === $year;
+                }
+                return true;
+            });
+
+            if (! $candidate) {
+                // fallback to any with poster
+                $candidate = $results->first(fn ($r) => ! empty($r['poster_path']));
+            }
+
+            if (! $candidate || empty($candidate['poster_path'])) {
+                return redirect()->route('films.index')->with('error', 'No poster found on TMDB for this film.');
+            }
+
+            $posterUrl = 'https://image.tmdb.org/t/p/w500'.$candidate['poster_path'];
+
+            $this->savePosterFromUrl($media, $posterUrl, false);
+
+            return redirect()->route('films.index')->with('success', 'Poster fetched successfully.');
+        } catch (\Throwable $e) {
+            Log::warning('fetchPoster failed', [
+                'media_id' => $media->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('films.index')->with('error', 'Unable to fetch poster right now.');
+        }
+    }
 }

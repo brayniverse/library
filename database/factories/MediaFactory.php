@@ -13,10 +13,10 @@ class MediaFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => $this->faker->word(),
-            'type' => $this->faker->word(),
-            'format' => $this->faker->word(),
-            'year' => $this->faker->word(),
+            'title' => $this->faker->sentence(3),
+            'type' => \App\Enums\MediaType::Film->value,
+            'format' => \App\Enums\MediaFormat::DVD->value,
+            'year' => (int) $this->faker->numberBetween(1950, 2024),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];

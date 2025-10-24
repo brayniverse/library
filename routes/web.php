@@ -145,6 +145,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('films/create', [MediaController::class, 'createFilm'])->name('films.create');
     Route::post('films', [MediaController::class, 'storeFilm'])->name('films.store');
     Route::put('films/{media}', [MediaController::class, 'updateFilm'])->name('films.update');
+    Route::post('films/{media}/poster', [MediaController::class, 'fetchPoster'])->name('films.fetchPoster');
     Route::delete('films/{media}', [MediaController::class, 'destroyFilm'])->name('films.destroy');
 
     // TMDB API helpers
