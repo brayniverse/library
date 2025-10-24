@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\PasskeysController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
@@ -25,4 +26,23 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
+
+    Route::get('settings/passkeys', function () {
+        return Inertia::render('settings/passkeys', [
+            'passkeys' => auth()
+                ->user()
+                ->passkeys()
+                ->get()
+                ->map(fn ($passkey) => $passkey->only('id', 'name', 'last_used_at')),
+        ]);
+    })->name('passkeys.edit');
+
+    Route::get('settings/passkeys/key-options', [PasskeysController::class, 'show'])
+         ->name('passkeys.passkey-options');
+
+    Route::post('settings/passkeys', [PasskeysController::class, 'create'])
+         ->name('passkeys.store');
+
+    Route::delete('settings/passkeys/{id}', [PasskeysController::class, 'destroy'])
+         ->name('passkeys.destroy');
 });
