@@ -9,11 +9,63 @@ import AuthLayout from '@/layouts/auth-layout';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, router } from '@inertiajs/react';
+import LaravelPasskeys from '@/actions/Spatie/LaravelPasskeys';
+const {
+    GeneratePasskeyAuthenticationOptionsController,
+    AuthenticateUsingPasskeyController,
+} = LaravelPasskeys.Http.Controllers;
+import { startAuthentication } from '@simplewebauthn/browser';
 
 interface LoginProps {
     status?: string;
     canResetPassword: boolean;
+}
+
+const passkeyLogin = async () => {
+    try {
+        // 1) Get authentication options from server
+        const res = await fetch(GeneratePasskeyAuthenticationOptionsController.url(), {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include',
+        })
+        if (!res.ok) throw new Error('Failed to fetch authentication options')
+        const optionsJSON = await res.json()
+
+        // 2) Call WebAuthn
+        const assertion = await startAuthentication(optionsJSON)
+
+        // 3) Post back to Spatie’s auth endpoint
+        const loginRes = await fetch(AuthenticateUsingPasskeyController.url(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                start_authentication_response: JSON.stringify(assertion),
+            }),
+        })
+
+        if (loginRes.redirected) {
+            // Spatie’s controller will redirect you to intended/after-login URL
+            window.location.href = loginRes.url
+            return
+        }
+
+        if (!loginRes.ok) {
+            const body = await loginRes.text()
+            throw new Error(`Passkey login failed: ${body}`)
+        }
+
+        // Fallback, but generally you’ll be redirected
+        router.visit('/')
+    } catch (e) {
+        console.error(e)
+        alert('Passkey login failed. See console for details.')
+    }
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
@@ -102,6 +154,14 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </>
                 )}
             </Form>
+
+            <hr />
+
+            <div className="flex flex-col gap-3">
+                <Button type="button" onClick={passkeyLogin}>
+                    Sign in with a passkey
+                </Button>
+            </div>
 
             {status && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">
