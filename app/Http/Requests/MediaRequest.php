@@ -17,6 +17,9 @@ class MediaRequest extends FormRequest
             // Optional JSON custom attributes bag
             'custom_attributes' => ['sometimes', 'array'],
 
+            // Optional poster URL to fetch and store locally
+            'poster_url' => ['sometimes', 'url'],
+
             // Film attributes (all optional)
             'custom_attributes.run_time' => ['sometimes', 'integer', 'min:0'],
             'custom_attributes.genres' => ['sometimes', 'array'],

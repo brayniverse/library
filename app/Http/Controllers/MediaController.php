@@ -7,11 +7,76 @@ use App\Enums\MediaType;
 use App\Http\Requests\MediaRequest;
 use App\Models\Media;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class MediaController extends Controller
 {
     use AuthorizesRequests;
+
+    /**
+     * Download an image from a remote URL and save it to the public disk,
+     * updating the Media's poster_path. When replacing, old file is deleted.
+     */
+    protected function savePosterFromUrl(Media $media, string $url, bool $replace = false): void
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return;
+        }
+
+        try {
+            $response = Http::timeout(15)->get($url);
+            if (! $response->ok()) {
+                return;
+            }
+
+            $contentType = (string) $response->header('Content-Type', '');
+            if ($contentType === '') {
+                // Try to infer from URL extension
+                $contentType = str_contains($url, '.png') ? 'image/png' : (str_contains($url, '.webp') ? 'image/webp' : 'image/jpeg');
+            }
+
+            if (! str_starts_with($contentType, 'image/')) {
+                return; // Not an image
+            }
+
+            $ext = 'jpg';
+            if (str_contains($contentType, 'png')) {
+                $ext = 'png';
+            } elseif (str_contains($contentType, 'webp')) {
+                $ext = 'webp';
+            } elseif (preg_match('/\.([a-zA-Z0-9]{3,4})(?:\?|$)/', $url, $m)) {
+                $ext = strtolower($m[1]);
+            }
+
+            $filename = $media->id.'-'.Str::slug((string) $media->title ?: 'poster').'.'.$ext;
+            $path = 'posters/'.$filename;
+
+            // Delete previous if replacing
+            if ($replace && $media->poster_path) {
+                try {
+                    Storage::disk('public')->delete($media->poster_path);
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+            }
+
+            Storage::disk('public')->put($path, $response->body());
+
+            $media->poster_path = $path;
+            $media->save();
+        } catch (\Throwable $e) {
+            Log::warning('Failed to save poster from URL', [
+                'media_id' => $media->id,
+                'url' => $url,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
 
     public function index()
     {
@@ -75,7 +140,8 @@ class MediaController extends Controller
         $year = is_null($year) || $year === '' ? null : (int) $year;
 
         $baseQuery = Media::query()
-            ->where('type', MediaType::Film->value);
+            ->where('type', MediaType::Film->value)
+            ->select(['id', 'title', 'orderable_title', 'format', 'year', 'custom_attributes', 'poster_path']);
 
         // Closure to apply filters consistently
         $applyFilters = function ($query) use ($format, $language, $country, $director, $year) {
@@ -114,18 +180,18 @@ class MediaController extends Controller
             // If no matches, short-circuit to an empty paginator
             if ($ids->isEmpty()) {
                 $films = $baseQuery->whereRaw('1=0')
-                    ->paginate($perPage, ['id', 'title', 'format', 'year', 'custom_attributes']);
+                    ->paginate($perPage);
             } else {
                 $films = $applyFilters($baseQuery)
                     ->whereIn('id', $ids)
                     ->when($sort === 'title', fn ($q) => $q->orderBy('orderable_title', $direction), fn ($q) => $q->orderBy($sort, $direction))
-                    ->paginate($perPage, ['id', 'title', 'format', 'year', 'custom_attributes'])
+                    ->paginate($perPage)
                     ->appends($request->query());
             }
         } else {
             $films = $applyFilters($baseQuery)
                 ->when($sort === 'title', fn ($q) => $q->orderby('orderable_title', $direction), fn ($q) => $q->orderBy($sort, $direction))
-                ->paginate($perPage, ['id', 'title', 'format', 'year', 'custom_attributes'])
+                ->paginate($perPage)
                 ->appends($request->query());
         }
 
@@ -185,7 +251,15 @@ class MediaController extends Controller
         // Enforce Film type regardless of input
         $data['type'] = MediaType::Film->value;
 
-        Media::create($data);
+        // Remove poster_url from mass assignment; we'll handle it separately
+        $posterUrl = $data['poster_url'] ?? null;
+        unset($data['poster_url']);
+
+        $media = Media::create($data);
+
+        if (is_string($posterUrl) && $posterUrl !== '') {
+            $this->savePosterFromUrl($media, $posterUrl);
+        }
 
         return redirect()->route('films.index')->with('success', 'Film added successfully.');
     }
@@ -198,7 +272,14 @@ class MediaController extends Controller
         // Keep type as Film regardless of input
         $data['type'] = MediaType::Film->value;
 
+        $posterUrl = $data['poster_url'] ?? null;
+        unset($data['poster_url']);
+
         $media->update($data);
+
+        if (is_string($posterUrl) && $posterUrl !== '') {
+            $this->savePosterFromUrl($media, $posterUrl, true);
+        }
 
         return redirect()->route('films.index')->with('success', 'Film updated successfully.');
     }

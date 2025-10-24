@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Scout\Searchable;
 
 #[ObservedBy(MediaObserver::class)]
@@ -23,6 +24,11 @@ class Media extends Model
         'format',
         'year',
         'custom_attributes',
+        'poster_path',
+    ];
+
+    protected $appends = [
+        'image_url',
     ];
 
     protected function casts(): array
@@ -33,6 +39,15 @@ class Media extends Model
             'type' => MediaType::class,
             'custom_attributes' => 'array',
         ];
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (! $this->poster_path) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->poster_path);
     }
 
     public function toSearchableArray(): array

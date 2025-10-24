@@ -33,11 +33,16 @@ class TmdbController extends Controller
                 $releaseYear = (int) substr($item['release_date'], 0, 4);
             }
 
+            $posterPath = $item['poster_path'] ?? null;
+            $posterUrl = $posterPath ? ('https://image.tmdb.org/t/p/w500' . $posterPath) : null;
+
             return [
                 'id' => $item['id'] ?? null,
                 'title' => $item['title'] ?? ($item['name'] ?? ''),
                 'year' => $releaseYear,
                 'overview' => $item['overview'] ?? null,
+                'poster_path' => $posterPath,
+                'poster_url' => $posterUrl,
             ];
         })->values();
 
@@ -92,9 +97,14 @@ class TmdbController extends Controller
             ->values()
             ->all();
 
+        $posterPath = $m['poster_path'] ?? null;
+        $posterUrl = $posterPath ? ('https://image.tmdb.org/t/p/w500' . $posterPath) : null;
+
         $data = [
             'title' => $m['title'] ?? ($m['name'] ?? ''),
             'year' => $year,
+            'poster_path' => $posterPath,
+            'poster_url' => $posterUrl,
             'custom_attributes' => [
                 'run_time' => $m['runtime'] ?? null,
                 'genres' => $genres,

@@ -44,6 +44,8 @@ type Film = {
   title: string;
   format: string;
   year: number;
+  poster_path?: string | null;
+  image_url?: string | null;
   custom_attributes?: CustomAttributes | null;
 };
 
@@ -151,6 +153,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
     format: formats?.[0] ?? '',
     year: new Date().getFullYear(),
     type: 'Film',
+    poster_url: '',
     custom_attributes: {} as CustomAttributes,
   });
 
@@ -167,6 +170,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
     format: formats?.[0] ?? '',
     year: new Date().getFullYear(),
     type: 'Film',
+    poster_url: '',
     custom_attributes: {} as CustomAttributes,
   });
 
@@ -220,6 +224,7 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
       // Populate form fields from TMDB data
       if (m.title) setCreateData('title', m.title);
       if (m.year) setCreateData('year', Number(m.year));
+      if (m.poster_url) setCreateData('poster_url', m.poster_url as string);
 
       const current = (createData.custom_attributes as CustomAttributes) ?? {};
       const next: CustomAttributes = {
@@ -441,6 +446,20 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
 
           {(() => {
             const columns: ColumnDef<Film>[] = [
+              {
+                id: 'poster',
+                header: () => '',
+                cell: ({ row }) => {
+                  const url = (row.original as Film).image_url;
+                  return url ? (
+                    <img src={url} alt="Poster" className="h-10 w-7 rounded object-cover" loading="lazy" />
+                  ) : (
+                    <div className="h-10 w-7 rounded bg-muted/50" />
+                  );
+                },
+                meta: { className: 'w-[36px]' },
+                enableSorting: false,
+              },
               {
                 accessorKey: 'title',
                 header: () => (
@@ -996,10 +1015,17 @@ export default function FilmsIndex({ films, formats, creating = false, q = '', s
 
           {!editing && selected && (
             <div className="space-y-4">
-              <div className="grid gap-2 text-sm">
-                <div><span className="font-medium">Title:</span> {selected.title}</div>
-                <div><span className="font-medium">Format:</span> {selected.format}</div>
-                <div><span className="font-medium">Year:</span> {selected.year}</div>
+              <div className="flex gap-4">
+                {selected.image_url ? (
+                  <img src={selected.image_url} alt="Poster" className="h-40 w-28 rounded object-cover shrink-0" />
+                ) : (
+                  <div className="h-40 w-28 rounded bg-muted/50 shrink-0" />
+                )}
+                <div className="grid gap-2 text-sm">
+                  <div><span className="font-medium">Title:</span> {selected.title}</div>
+                  <div><span className="font-medium">Format:</span> {selected.format}</div>
+                  <div><span className="font-medium">Year:</span> {selected.year}</div>
+                </div>
               </div>
 
               {/* Optional attributes */}
